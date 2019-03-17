@@ -11,7 +11,7 @@ def unibo_calendar():
     calendar = Calendar()
 
     # Get HTML
-    url = 'https://corsi.unibo.it/laurea/IngegneriaGestionale/orario-lezionii?anno=' + YEAR
+    url = 'https://corsi.unibo.it/laurea/IngegneriaGestionale/orario-lezionii?anno=' + str(YEAR)
     response = requests.get(url)
     html = response.content
     soup = BeautifulSoup(html, features="html.parser")
