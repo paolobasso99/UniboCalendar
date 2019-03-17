@@ -3,13 +3,15 @@ from bs4 import BeautifulSoup
 from ics import Calendar, Event
 import arrow
 
+YEAR = 1
+
 
 def unibo_calendar():
     # Start calendar
     calendar = Calendar()
 
     # Get HTML
-    url = 'https://corsi.unibo.it/laurea/IngegneriaGestionale/orario-lezioni'
+    url = 'https://corsi.unibo.it/laurea/IngegneriaGestionale/orario-lezionii?anno=' + YEAR
     response = requests.get(url)
     html = response.content
     soup = BeautifulSoup(html, features="html.parser")
