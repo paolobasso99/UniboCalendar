@@ -1,42 +1,46 @@
 import requests
-from bs4 import BeautifulSoup
 from ics import Calendar, Event
 import arrow
+from Settings import Settings
 
-YEAR = 1
+settings = Settings()
+
+YEAR = settings.get('YEAR')
+COURSE = settings.get('COURSE')
 
 
 def unibo_calendar():
-    # Start calendar
-    calendar = Calendar()
-
-    # Get HTML
-    url = 'https://corsi.unibo.it/laurea/IngegneriaGestionale/orario-lezionii?anno=' + str(YEAR)
-    response = requests.get(url)
-    html = response.content
-    soup = BeautifulSoup(html, features="html.parser")
+    print("Options:")
+    print("Year: " + YEAR)
+    print("Course: " + COURSE)
 
     # Get data
-    url = soup.find("div", {"id" : "calendar"}).get("data-url")
-    result = requests.get(url).json()
-    events = result.get("events")
+    print("Getting json data...")
+    url = 'https://corsi.unibo.it/laurea/' + \
+        str(COURSE) + "/orario-lezioni/@@orario_reale_json?anno=" + str(YEAR)
+    events = requests.get(url).json()
+    print(str(len(events)) + " events found!")
 
     # Build calendar
+    calendar = Calendar()
     for event in events:
-        if event.get("lettere") != "L-Z":  # If not "L-Z"
+        # Build event
+        e = Event(location=event.get("aule")[0].get(
+            "des_ubicazione"), alarms=None)
+        e.name = event.get("title").title() + " - " + \
+            event.get("aule")[0].get("des_risorsa")
+        e.begin = arrow.get(event.get("start")).replace(
+            tzinfo="Europe/Rome")
+        e.end = arrow.get(event.get("end")).replace(tzinfo="Europe/Rome")
 
-            # Build event
-            e = Event(location=event.get("aule")[0].get("des_ubicazione"), alarms=None)
-            e.name = event.get("title").title() + " - " + event.get("aule")[0].get("des_risorsa")
-            e.begin = arrow.get(event.get("start")).replace(tzinfo="Europe/Rome")
-            e.end = arrow.get(event.get("end")).replace(tzinfo="Europe/Rome")
-
-            # Add event to calendar
-            calendar.events.add(e)
+        # Add event to calendar
+        calendar.events.add(e)
 
     # Print file
+    print("Writing .ics...")
     with open('UniboCalendar.ics', 'w') as file:
         file.writelines(calendar)
+        print("Done!")
 
 
 if __name__ == "__main__":
